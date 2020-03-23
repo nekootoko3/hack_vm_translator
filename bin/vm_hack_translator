@@ -1,0 +1,5 @@
+#!/usr/bin/env ruby
+
+require "vm_hack_translator"
+
+VmHackTranslator::Cli.start ARGV
