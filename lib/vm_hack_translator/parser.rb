@@ -46,8 +46,8 @@ class VmHackTranslator::Parser
   def remove_comment_and_space(command_lines)
     command_lines.map do |c|
       c.sub!(/\s*\/\/.*/, "")
-      c.empty? ? nil : c
       c.strip!
+      c.empty? ? nil : c
     end.compact
   end
 
