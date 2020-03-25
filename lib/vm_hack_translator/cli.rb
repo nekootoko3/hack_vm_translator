@@ -31,5 +31,7 @@ module VmHackTranslator::Cli
         end
       end
     end
+
+    code_writer.close!
   end
 end
