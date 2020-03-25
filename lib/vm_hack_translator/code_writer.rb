@@ -100,7 +100,7 @@ class VmHackTranslator::CodeWriter
     case segment.to_sym
     when :constant
       @output.puts("@#{value}", "D=A")
-    when :pointer
+    when :pointer, :static
       @output.puts("@#{symbol_from(segment)}")
       @output.puts(["A=A+1"] * value.to_i) if value.to_i > 0
       @output.puts("D=M")
@@ -119,7 +119,7 @@ class VmHackTranslator::CodeWriter
     @output.puts(
       "@SP", "A=M-1", "D=M // D <- pop value",
       "@#{symbol_from(segment)}")
-    @output.puts("A=M") unless [:pointer, :temp].include?(segment.to_sym)
+    @output.puts("A=M") unless [:pointer, :temp, :static].include?(segment.to_sym)
     @output.puts(["A=A+1"] * value.to_i) if value.to_i > 0
     @output.puts("M=D", "@SP", "M=M-1")
   end

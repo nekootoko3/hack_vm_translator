@@ -6,6 +6,7 @@ class VmHackTranslator::MemoryAccessor
     that: "THAT",
     temp: "5",
     pointer: "3",
+    static: "16",
   }
 
   def self.symbol_from(segment)
