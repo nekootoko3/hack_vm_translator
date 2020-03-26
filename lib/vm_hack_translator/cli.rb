@@ -14,18 +14,19 @@ module VmHackTranslator::Cli
       else
         raise "Invalid input specified"
       end
-    raise "No valid input files" if input_files.empty?
+    raise "Valid input files don't exist" if input_files.empty?
 
     code_writer = VmHackTranslator::CodeWriter.new(args[1])
 
     input_files.each do |input_file|
       parser = VmHackTranslator::Parser.new(input_file)
+      code_writer.set_file_name(input_file)
       while parser.has_more_commands?
         parser.advance!
 
         case parser.command_type
         when VmHackTranslator::CommandType::C_PUSH, VmHackTranslator::CommandType::C_POP
-          code_writer.write_push_pop!(parser.command_type, parser.arg1, parser.arg2)
+          code_writer.write_push_pop!(parser.command_type, parser.arg1, parser.arg2.to_i)
         when VmHackTranslator::CommandType::C_ARITHMETIC
           code_writer.write_arithmetic!(parser.arg1)
         end
