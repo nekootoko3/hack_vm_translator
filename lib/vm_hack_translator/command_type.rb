@@ -11,18 +11,23 @@ module VmHackTranslator::CommandType
   C_CALL       = 9
 
   COMMAND_TYPE_MAPPING = {
-    add:     C_ARITHMETIC,
-    sub:     C_ARITHMETIC,
-    neg:     C_ARITHMETIC,
-    eq:      C_ARITHMETIC,
-    gt:      C_ARITHMETIC,
-    lt:      C_ARITHMETIC,
-    and:     C_ARITHMETIC,
-    or:      C_ARITHMETIC,
-    not:     C_ARITHMETIC,
-    push:    C_PUSH,
-    pop:     C_POP,
-    return:  C_RETURN,
+    add:      C_ARITHMETIC,
+    sub:      C_ARITHMETIC,
+    neg:      C_ARITHMETIC,
+    eq:       C_ARITHMETIC,
+    gt:       C_ARITHMETIC,
+    lt:       C_ARITHMETIC,
+    and:      C_ARITHMETIC,
+    or:       C_ARITHMETIC,
+    not:      C_ARITHMETIC,
+    push:     C_PUSH,
+    pop:      C_POP,
+    return:   C_RETURN,
+    label:    C_LABEL,
+    goto:     C_GOTO,
+    if:       C_IF,
+    call:     C_CALL,
+    function: C_FUNCTION,
   }.freeze
 
   # @param instruction [String]
