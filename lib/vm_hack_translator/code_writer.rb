@@ -75,7 +75,24 @@ class VmHackTranslator::CodeWriter
     else
       raise "Invalid command type #{command_type}"
     end
- end
+  end
+
+  # @param label [String]
+  def write_label!(label)
+    @output.puts("(#{label})")
+  end
+
+  # @param label [String]
+  def write_if_goto!(label)
+    write_stack_top_value_on_d_register!
+    decrement_sp!
+    @output.puts("@#{label}", "D;JGT")
+  end
+
+  # @param label [String]
+  def write_goto!(label)
+    @output.puts("@#{label}", "0;JMP")
+  end
 
   def close!
     write_inifinite_loop!

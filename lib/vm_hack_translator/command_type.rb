@@ -4,11 +4,12 @@ module VmHackTranslator::CommandType
   C_PUSH       = 2
   C_POP        = 3
   C_LABEL      = 4
-  C_GOTO       = 5
-  C_IF         = 6
-  C_FUNCTION   = 7
-  C_RETURN     = 8
-  C_CALL       = 9
+  C_GOTO    = 5
+  C_IF_GOTO    = 6
+  C_IF         = 7
+  C_FUNCTION   = 8
+  C_RETURN     = 9
+  C_CALL       = 10
 
   COMMAND_TYPE_MAPPING = {
     add:      C_ARITHMETIC,
@@ -25,14 +26,15 @@ module VmHackTranslator::CommandType
     return:   C_RETURN,
     label:    C_LABEL,
     goto:     C_GOTO,
+    if_goto:  C_IF_GOTO,
     if:       C_IF,
     call:     C_CALL,
     function: C_FUNCTION,
   }.freeze
 
-  # @param instruction [String]
+  # @param command [String]
   # @return [Integer]
-  def self.command_type_from(instruction)
-    COMMAND_TYPE_MAPPING[instruction.to_sym]
+  def self.command_type_from(command)
+    COMMAND_TYPE_MAPPING[command.sub("-", "_").to_sym]
   end
 end
