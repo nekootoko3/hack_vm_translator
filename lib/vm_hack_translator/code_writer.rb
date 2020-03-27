@@ -32,7 +32,6 @@ class VmHackTranslator::CodeWriter
   def initialize(output)
     @output = output.nil? ?
       $stdout : File.open(output, "w+")
-    @cmp_count = 0
 
     output_initialize!
   end
@@ -83,10 +82,10 @@ class VmHackTranslator::CodeWriter
   end
 
   # @param label [String]
-  def write_if_goto!(label)
+  def write_if!(label)
     write_stack_top_value_on_d_register!
     decrement_sp!
-    @output.puts("@#{label}", "D;JGT")
+    @output.puts("@#{label}", "D;JNE")
   end
 
   # @param label [String]
@@ -105,17 +104,34 @@ class VmHackTranslator::CodeWriter
     write_local_base_address_on_r13!
     write_return_address_on_r14!
     write_return_value!
-    write_caller_frame!
+    write_back_caller_frame!
     write_goto_return_address!
   end
 
   # @param label [String]
   # @param num_locals [Integer]
   def write_call!(label, num_locals)
+    @call_cnt = 0 unless defined?(@call_cnt)
+
+    @output.puts("@RETURN_#{@call_cnt}", "D=A", "@SP", "A=M", "M=D")
+    increment_sp!
+    @output.puts("@LCL", "D=M", "@SP", "A=M", "M=D")
+    increment_sp!
+    @output.puts("@ARG", "D=M", "@SP", "A=M", "M=D")
+    increment_sp!
+    @output.puts("@THIS", "D=M", "@SP", "A=M", "M=D")
+    increment_sp!
+    @output.puts("@THAT", "D=M", "@SP", "A=M", "M=D")
+    increment_sp!
+    @output.puts("@SP", "D=M", ["D=D-1"] * (num_locals + 5), "@ARG", "M=D")
+    @output.puts("@SP", "D=M", "@LCL", "M=D")
+    write_goto!(label)
+    @output.puts("(RETURN_#{@call_cnt})")
+
+    @call_cnt += 1
   end
 
   def close!
-    write_inifinite_loop!
     @output.close
   end
 
@@ -123,12 +139,14 @@ class VmHackTranslator::CodeWriter
 
   def output_initialize!
     @output.puts(
-#      "@#{INITIAL_STACK_POINTER}", "D=A", "@SP", "M=D",
-#      "@#{LOCAL_BASE}", "D=A", "@LCL", "M=D",
-#      "@#{ARGUMENT_BASE}", "D=A", "@ARG", "M=D",
-#      "@#{THIS_BASE}", "D=A", "@THIS", "M=D",
-#      "@#{THAT_BASE}", "D=A", "@THAT", "M=D",
+     "@#{INITIAL_STACK_POINTER}", "D=A", "@SP", "M=D",
+     "@#{LOCAL_BASE}", "D=A", "@LCL", "M=D",
+     "@#{ARGUMENT_BASE}", "D=A", "@ARG", "M=D",
+     "@#{THIS_BASE}", "D=A", "@THIS", "M=D",
+     "@#{THAT_BASE}", "D=A", "@THAT", "M=D"
     )
+
+    write_call!("Sys.init", 0)
   end
 
   # @param segment [String]
@@ -251,8 +269,8 @@ class VmHackTranslator::CodeWriter
 
     @output.puts(
       "D=M-D", "@CMP_TRUE_#{@cmp_count}", "D;#{assembly_from(vm_command)}",
-      "@SP // false case", "A=M-1", "M=0", "@CMP_END_#{@cmp_count}", "0;JMP",
-      "(CMP_TRUE_#{@cmp_count})  // true case", "@SP", "A=M-1", "M=-1",
+      "@SP", "A=M-1", "M=0", "@CMP_END_#{@cmp_count}", "0;JMP",
+      "(CMP_TRUE_#{@cmp_count})", "@SP", "A=M-1", "M=-1",
       "(CMP_END_#{@cmp_count})"
     )
 
@@ -283,7 +301,7 @@ class VmHackTranslator::CodeWriter
     write_pop!("argument", 0)
   end
 
-  def write_caller_frame!
+  def write_back_caller_frame!
     @output.puts("@ARG", "D=M", "@SP", "M=D+1")
     @output.puts("@R13", "M=M-1", "A=M", "D=M", "@THAT", "M=D")
     @output.puts("@R13", "M=M-1", "A=M", "D=M", "@THIS", "M=D")
@@ -293,9 +311,5 @@ class VmHackTranslator::CodeWriter
 
   def write_goto_return_address!
     @output.puts("@R14", "A=M", "0;JMP")
-  end
-
-  def write_inifinite_loop!
-    @output.puts("(END)", "@END", "0;JMP")
   end
 end

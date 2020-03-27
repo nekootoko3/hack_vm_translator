@@ -32,7 +32,7 @@ module VmHackTranslator::Cli
         when VmHackTranslator::CommandType::C_LABEL
           code_writer.write_label!(parser.arg1)
         when VmHackTranslator::CommandType::C_IF_GOTO
-          code_writer.write_if_goto!(parser.arg1)
+          code_writer.write_if!(parser.arg1)
         when VmHackTranslator::CommandType::C_GOTO
           code_writer.write_goto!(parser.arg1)
         when VmHackTranslator::CommandType::C_FUNCTION
