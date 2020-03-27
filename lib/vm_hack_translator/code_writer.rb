@@ -94,6 +94,26 @@ class VmHackTranslator::CodeWriter
     @output.puts("@#{label}", "0;JMP")
   end
 
+  # @param label [String]
+  # @param num_locals [Integer]
+  def write_function!(label, num_locals)
+    @output.puts("(#{label})")
+    write_local_initialization!(num_locals)
+  end
+
+  def write_return!
+    write_local_base_address_on_r13!
+    write_return_address_on_r14!
+    write_return_value!
+    write_caller_frame!
+    write_goto_return_address!
+  end
+
+  # @param label [String]
+  # @param num_locals [Integer]
+  def write_call!(label, num_locals)
+  end
+
   def close!
     write_inifinite_loop!
     @output.close
@@ -103,7 +123,7 @@ class VmHackTranslator::CodeWriter
 
   def output_initialize!
     @output.puts(
-      "@#{INITIAL_STACK_POINTER}", "D=A", "@SP", "M=D",
+#      "@#{INITIAL_STACK_POINTER}", "D=A", "@SP", "M=D",
 #      "@#{LOCAL_BASE}", "D=A", "@LCL", "M=D",
 #      "@#{ARGUMENT_BASE}", "D=A", "@ARG", "M=D",
 #      "@#{THIS_BASE}", "D=A", "@THIS", "M=D",
@@ -237,6 +257,42 @@ class VmHackTranslator::CodeWriter
     )
 
     @cmp_count += 1
+  end
+
+  # @param num_locals [Integer]
+  def write_local_initialization!(num_locals)
+    return unless num_locals > 0
+
+    write_local_base_address_on_a_register!
+    @output.puts(["M=0", "A=A+1"] * num_locals)
+  end
+
+  def write_local_base_address_on_a_register!
+    @output.puts("@LCL", "A=M")
+  end
+
+  def write_local_base_address_on_r13!
+    @output.puts("@LCL", "D=M", "@R13", "M=D")
+  end
+
+  def write_return_address_on_r14!
+    @output.puts("@R13", "D=M", ["D=D-1"] * 5, "A=D", "D=M", "@R14", "M=D")
+  end
+
+  def write_return_value!
+    write_pop!("argument", 0)
+  end
+
+  def write_caller_frame!
+    @output.puts("@ARG", "D=M", "@SP", "M=D+1")
+    @output.puts("@R13", "M=M-1", "A=M", "D=M", "@THAT", "M=D")
+    @output.puts("@R13", "M=M-1", "A=M", "D=M", "@THIS", "M=D")
+    @output.puts("@R13", "M=M-1", "A=M", "D=M", "@ARG", "M=D")
+    @output.puts("@R13", "M=M-1", "A=M", "D=M", "@LCL", "M=D")
+  end
+
+  def write_goto_return_address!
+    @output.puts("@R14", "A=M", "0;JMP")
   end
 
   def write_inifinite_loop!

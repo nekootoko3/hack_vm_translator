@@ -35,6 +35,12 @@ module VmHackTranslator::Cli
           code_writer.write_if_goto!(parser.arg1)
         when VmHackTranslator::CommandType::C_GOTO
           code_writer.write_goto!(parser.arg1)
+        when VmHackTranslator::CommandType::C_FUNCTION
+          code_writer.write_function!(parser.arg1, parser.arg2.to_i)
+        when VmHackTranslator::CommandType::C_RETURN
+          code_writer.write_return!
+        when VmHackTranslator::CommandType::C_CALL
+          code_writer.write_call!(parser.arg1, parser.arg2.to_i)
         else
         end
       end
