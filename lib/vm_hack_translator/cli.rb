@@ -6,15 +6,15 @@ module VmHackTranslator::Cli
   def self.start(args)
     input_files = case File.ftype(args[0])
       when "file"
-        raise "Invalid file type passed" unless args[0].match?(/.+\.vm/)
+        raise VmHackTranslator::Error, "Invalid file type passed" unless args[0].match?(/.+\.vm/)
 
         [args[0]]
       when "directory"
         Dir.glob("#{args[0]}/*.vm")
       else
-        raise "Invalid input specified"
+        raise VmHackTranslator::Error, "Invalid input specified"
       end
-    raise "Valid input files don't exist" if input_files.empty?
+    raise VmHackTranslator::Error, "Valid input files don't exist" if input_files.empty?
 
     code_writer = VmHackTranslator::CodeWriter.new(args[1])
 

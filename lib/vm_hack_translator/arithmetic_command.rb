@@ -52,7 +52,7 @@ class VmHackTranslator::ArithmeticCommand
   def initialize(command)
     @command = ARITHMETIC_COMMAND_MAPPING[command.to_sym]
 
-    raise "Invalid command #{@command}" unless @command
+    raise VmHackTranslator::Error, "Invalid command #{@command}" unless @command
   end
 
   def unary_function?

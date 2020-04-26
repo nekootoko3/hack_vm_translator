@@ -58,7 +58,7 @@ class VmHackTranslator::CodeWriter
       write_stack_top_address_on_a_register!
       exec_comparison!(command)
     else
-      raise "Invalid arithmetic command"
+      raise VmHackTranslator::Error, "Invalid arithmetic command"
     end
   end
 
@@ -72,7 +72,7 @@ class VmHackTranslator::CodeWriter
     when VmHackTranslator::CommandType::C_POP
       write_pop!(segment, index)
     else
-      raise "Invalid command type #{command_type}"
+      raise VmHackTranslator::Error, "Invalid command type #{command_type}"
     end
   end
 

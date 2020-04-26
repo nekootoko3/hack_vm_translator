@@ -14,7 +14,7 @@ class VmHackTranslator::Parser
   end
 
   def advance!
-    raise "No new command_lines exists" unless has_more_commands?
+    raise VmHackTranslator::Error, "No new command_lines exists" unless has_more_commands?
 
     @current_command_line = @command_lines[@next_line_number].split
     @next_line_number += 1
@@ -29,14 +29,14 @@ class VmHackTranslator::Parser
     when VmHackTranslator::CommandType::C_ARITHMETIC
       current_command
     when VmHackTranslator::CommandType::C_RETURN
-      raise "Invalid command type #{command_type}"
+      raise VmHackTranslator::Error, "Invalid command type #{command_type}"
     else
       @current_command_line[1]
     end
   end
 
   def arg2
-    raise "Invalid command type #{command_type}" unless arg2_enabeld?
+    raise VmHackTranslator::Error, "Invalid command type #{command_type}" unless arg2_enabeld?
 
     @current_command_line[2]
   end
