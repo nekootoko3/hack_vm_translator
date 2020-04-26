@@ -4,4 +4,4 @@ $LOAD_PATH.unshift File.dirname(__FILE__) + "/../lib"
 
 require "vm_hack_translator"
 
-VmHackTranslator::Cli.start ARGV
+VmHackTranslator::Cli.start

@@ -30,8 +30,7 @@ class VmHackTranslator::CodeWriter
 
   # @param output [String]
   def initialize(output)
-    @output = output.nil? ?
-      $stdout : File.open(output, "w+")
+    @output = output.is_a?(IO) ? output : File.new(output, "w+")
 
     output_initialize!
   end
