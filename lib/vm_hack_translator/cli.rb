@@ -6,13 +6,17 @@ require "vm_hack_translator/code_writer"
 
 module VmHackTranslator
   class Cli
+    attr_reader :options, :vm_path
+    attr_accessor :vm_files
+
     def self.start(options = nil)
       new(options).start
     end
 
-    attr_reader :options
-
     def initialize(options = nil)
+      @vm_files = nil
+      @vm_path = ARGV[0]
+
       if options
         @options = options
         return
@@ -27,29 +31,12 @@ module VmHackTranslator
     end
 
     def start
-      input = ARGV[0]
-      if input.nil?
-        raise "Neither input file specified nor debug option"
-      end
+      load_vm_files!
 
-      input_files = case File.ftype(input)
-        when "file"
-          raise ArgumentError, "Invalid file type passed" unless input.match?(/.+\.vm/)
-
-          [input]
-        when "directory"
-          Dir.glob("#{input}/*.vm")
-        else
-          raise ArgumentError, "Invalid input specified"
-        end
-      raise ArgumentError, "Valid input files don't exist" if input_files.empty?
-
-      output = options[:debug] ? $stdout : output_file_from(input)
       code_writer = VmHackTranslator::CodeWriter.new(output)
-
-      input_files.each do |input_file|
-        parser = VmHackTranslator::Parser.new(input_file)
-        code_writer.set_file_name(input_file)
+      vm_files.each do |vm_file|
+        parser = VmHackTranslator::Parser.new(vm_file)
+        code_writer.set_file_name(vm_file)
         while parser.has_more_commands?
           parser.advance!
 
@@ -80,12 +67,33 @@ module VmHackTranslator
 
     private
 
-    def output_file_from(input)
-      case File.ftype(input)
+    def load_vm_files!
+      @vm_files = case File.ftype(vm_path)
+        when "file"
+          vm_path.match?(/.+\.vm/) ? [vm_path] : nil
+        when "directory"
+          Dir.glob("#{vm_path}/*.vm")
+        else
+          nil
+        end
+
+      raise ArgumentError, "vm file or directory which includes vm files should be paseed, but got #{vm_path}" unless @vm_files
+    end
+
+    def output
+      return @output if defined?(@output)
+
+      @output = options[:debug] ? $stdout : output_file
+    end
+
+    def output_file
+      case File.ftype(vm_path)
       when "file"
-        File.join(File.dirname(input), File.basename(input, ".*") + ".asm")
+        File.join(File.dirname(vm_path), File.basename(vm_path, ".*") + ".asm")
       when "directory"
-        File.join(File.absolute_path(input), input + ".asm")
+        File.join(File.absolute_path(vm_path), vm_path + ".asm")
+      else
+        nil
       end
     end
   end
