@@ -10,6 +10,8 @@ module VmHackTranslator
       new(options).start
     end
 
+    attr_reader :options
+
     def initialize(options = nil)
       if options
         @options = options
@@ -42,7 +44,7 @@ module VmHackTranslator
         end
       raise ArgumentError, "Valid input files don't exist" if input_files.empty?
 
-      output = @options[:debug] ? $stdout : output_file_from(input)
+      output = options[:debug] ? $stdout : output_file_from(input)
       code_writer = VmHackTranslator::CodeWriter.new(output)
 
       input_files.each do |input_file|
