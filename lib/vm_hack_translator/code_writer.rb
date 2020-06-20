@@ -28,6 +28,9 @@ class VmHackTranslator::CodeWriter
     that: "THAT",
   }
 
+  attr_accessor :output
+  attr_reader :file_name
+
   # @param output [String]
   def initialize(output)
     @output = output.is_a?(IO) ? output : File.new(output, "w+")
@@ -45,12 +48,12 @@ class VmHackTranslator::CodeWriter
     case command.to_sym
     when :neg, :not
       write_stack_top_address_on_a_register!
-      @output.puts("M=#{assembly_from(command)}M")
+      output.puts("M=#{assembly_from(command)}M")
     when :add, :sub, :and, :or
       write_stack_top_value_on_d_register!
       decrement_sp!
       write_stack_top_address_on_a_register!
-      @output.puts("M=M#{assembly_from(command)}D")
+      output.puts("M=M#{assembly_from(command)}D")
     when :eq, :gt, :lt
       write_stack_top_value_on_d_register!
       decrement_sp!
@@ -77,25 +80,25 @@ class VmHackTranslator::CodeWriter
 
   # @param label [String]
   def write_label!(label)
-    @output.puts("(#{label})")
+    output.puts("(#{label})")
   end
 
   # @param label [String]
   def write_if!(label)
     write_stack_top_value_on_d_register!
     decrement_sp!
-    @output.puts("@#{label}", "D;JNE")
+    output.puts("@#{label}", "D;JNE")
   end
 
   # @param label [String]
   def write_goto!(label)
-    @output.puts("@#{label}", "0;JMP")
+    output.puts("@#{label}", "0;JMP")
   end
 
   # @param label [String]
   # @param num_locals [Integer]
   def write_function!(label, num_locals)
-    @output.puts("(#{label})")
+    output.puts("(#{label})")
     write_local_initialization!(num_locals)
   end
 
@@ -112,32 +115,32 @@ class VmHackTranslator::CodeWriter
   def write_call!(label, num_locals)
     @call_cnt = 0 unless defined?(@call_cnt)
 
-    @output.puts("@RETURN_#{@call_cnt}", "D=A", "@SP", "A=M", "M=D")
+    output.puts("@RETURN_#{@call_cnt}", "D=A", "@SP", "A=M", "M=D")
     increment_sp!
-    @output.puts("@LCL", "D=M", "@SP", "A=M", "M=D")
+    output.puts("@LCL", "D=M", "@SP", "A=M", "M=D")
     increment_sp!
-    @output.puts("@ARG", "D=M", "@SP", "A=M", "M=D")
+    output.puts("@ARG", "D=M", "@SP", "A=M", "M=D")
     increment_sp!
-    @output.puts("@THIS", "D=M", "@SP", "A=M", "M=D")
+    output.puts("@THIS", "D=M", "@SP", "A=M", "M=D")
     increment_sp!
-    @output.puts("@THAT", "D=M", "@SP", "A=M", "M=D")
+    output.puts("@THAT", "D=M", "@SP", "A=M", "M=D")
     increment_sp!
-    @output.puts("@SP", "D=M", ["D=D-1"] * (num_locals + 5), "@ARG", "M=D")
-    @output.puts("@SP", "D=M", "@LCL", "M=D")
+    output.puts("@SP", "D=M", ["D=D-1"] * (num_locals + 5), "@ARG", "M=D")
+    output.puts("@SP", "D=M", "@LCL", "M=D")
     write_goto!(label)
-    @output.puts("(RETURN_#{@call_cnt})")
+    output.puts("(RETURN_#{@call_cnt})")
 
     @call_cnt += 1
   end
 
   def close!
-    @output.close
+    output.close
   end
 
   private
 
   def output_initialize!
-    @output.puts(
+    output.puts(
      "@#{INITIAL_STACK_POINTER}", "D=A", "@SP", "M=D",
      "@#{LOCAL_BASE}", "D=A", "@LCL", "M=D",
      "@#{ARGUMENT_BASE}", "D=A", "@ARG", "M=D",
@@ -175,23 +178,23 @@ class VmHackTranslator::CodeWriter
   end
 
   def write_stack_top_address_on_a_register!
-    @output.puts("@SP", "A=M-1")
+    output.puts("@SP", "A=M-1")
   end
 
   def write_stack_top_value_on_d_register!
-    @output.puts("@SP", "A=M-1", "D=M")
+    output.puts("@SP", "A=M-1", "D=M")
   end
 
   def decrement_sp!
-    @output.puts("@SP", "M=M-1")
+    output.puts("@SP", "M=M-1")
   end
 
   def increment_sp!
-    @output.puts("@SP", "M=M+1")
+    output.puts("@SP", "M=M+1")
   end
 
   def write_d_register_value_on_stack_top!
-    @output.puts("@SP", "A=M", "M=D")
+    output.puts("@SP", "A=M", "M=D")
   end
 
   def write_segment_value_on_d_register!(segment, index)
@@ -210,25 +213,25 @@ class VmHackTranslator::CodeWriter
   end
 
   def write_constant_on_d_register!(index)
-    @output.puts("@#{index}", "D=A")
+    output.puts("@#{index}", "D=A")
   end
 
   def write_pointer_value_on_d_register!(index)
-    @output.puts("@#{POINTER_BASE_ADDRESS + index}", "D=M")
+    output.puts("@#{POINTER_BASE_ADDRESS + index}", "D=M")
   end
 
   def write_static_value_on_d_register!(index)
-    @output.puts("@#{@file_name}.#{index}", "D=M")
+    output.puts("@#{file_name}.#{index}", "D=M")
   end
 
   def write_temp_value_on_d_register!(index)
-    @output.puts("@#{TEMP_BASE_ADDRESS + index}", "D=M")
+    output.puts("@#{TEMP_BASE_ADDRESS + index}", "D=M")
   end
 
   def write_symbol_value_on_d_register!(segment, index)
-    @output.puts("@#{symbol_from(segment)}", "A=M")
-    @output.puts(["A=A+1"] * index) if index > 0
-    @output.puts("D=M")
+    output.puts("@#{symbol_from(segment)}", "A=M")
+    output.puts(["A=A+1"] * index) if index > 0
+    output.puts("D=M")
   end
 
   def write_d_register_value_on_segment!(segment, index)
@@ -242,31 +245,31 @@ class VmHackTranslator::CodeWriter
     else
       write_symbol_address_on_a_register!(segment, index)
     end
-    @output.puts("M=D")
+    output.puts("M=D")
   end
 
   def write_pointer_address_on_a_register!(index)
-    @output.puts("@#{POINTER_BASE_ADDRESS + index}")
+    output.puts("@#{POINTER_BASE_ADDRESS + index}")
   end
 
   def write_static_address_on_a_register!(index)
-    @output.puts("@#{@file_name}.#{index}")
+    output.puts("@#{file_name}.#{index}")
   end
 
   def write_temp_address_on_a_register!(index)
-    @output.puts("@#{TEMP_BASE_ADDRESS + index}")
+    output.puts("@#{TEMP_BASE_ADDRESS + index}")
   end
 
   def write_symbol_address_on_a_register!(segment, index)
-    @output.puts("@#{symbol_from(segment)}", "A=M")
-    @output.puts(["A=A+1"] * index) if index > 0
+    output.puts("@#{symbol_from(segment)}", "A=M")
+    output.puts(["A=A+1"] * index) if index > 0
   end
 
   # before exec_comparison, d register must be right and stack top value must be nn
   def exec_comparison!(vm_command)
     @cmp_count = 0 unless defined?(@cmp_count)
 
-    @output.puts(
+    output.puts(
       "D=M-D", "@CMP_TRUE_#{@cmp_count}", "D;#{assembly_from(vm_command)}",
       "@SP", "A=M-1", "M=0", "@CMP_END_#{@cmp_count}", "0;JMP",
       "(CMP_TRUE_#{@cmp_count})", "@SP", "A=M-1", "M=-1",
@@ -281,19 +284,19 @@ class VmHackTranslator::CodeWriter
     return unless num_locals > 0
 
     write_local_base_address_on_a_register!
-    @output.puts(["M=0", "A=A+1"] * num_locals)
+    output.puts(["M=0", "A=A+1"] * num_locals)
   end
 
   def write_local_base_address_on_a_register!
-    @output.puts("@LCL", "A=M")
+    output.puts("@LCL", "A=M")
   end
 
   def write_local_base_address_on_r13!
-    @output.puts("@LCL", "D=M", "@R13", "M=D")
+    output.puts("@LCL", "D=M", "@R13", "M=D")
   end
 
   def write_return_address_on_r14!
-    @output.puts("@R13", "D=M", ["D=D-1"] * 5, "A=D", "D=M", "@R14", "M=D")
+    output.puts("@R13", "D=M", ["D=D-1"] * 5, "A=D", "D=M", "@R14", "M=D")
   end
 
   def write_return_value!
@@ -301,14 +304,14 @@ class VmHackTranslator::CodeWriter
   end
 
   def write_back_caller_frame!
-    @output.puts("@ARG", "D=M", "@SP", "M=D+1")
-    @output.puts("@R13", "M=M-1", "A=M", "D=M", "@THAT", "M=D")
-    @output.puts("@R13", "M=M-1", "A=M", "D=M", "@THIS", "M=D")
-    @output.puts("@R13", "M=M-1", "A=M", "D=M", "@ARG", "M=D")
-    @output.puts("@R13", "M=M-1", "A=M", "D=M", "@LCL", "M=D")
+    output.puts("@ARG", "D=M", "@SP", "M=D+1")
+    output.puts("@R13", "M=M-1", "A=M", "D=M", "@THAT", "M=D")
+    output.puts("@R13", "M=M-1", "A=M", "D=M", "@THIS", "M=D")
+    output.puts("@R13", "M=M-1", "A=M", "D=M", "@ARG", "M=D")
+    output.puts("@R13", "M=M-1", "A=M", "D=M", "@LCL", "M=D")
   end
 
   def write_goto_return_address!
-    @output.puts("@R14", "A=M", "0;JMP")
+    output.puts("@R14", "A=M", "0;JMP")
   end
 end
