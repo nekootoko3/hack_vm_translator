@@ -58,6 +58,7 @@ module VmHackTranslator
           when VmHackTranslator::CommandType::C_CALL
             code_writer.write_call!(parser.arg1, parser.arg2.to_i)
           else
+            raise "Invalid command type"
           end
         end
       end
