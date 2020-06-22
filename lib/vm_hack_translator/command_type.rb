@@ -4,7 +4,7 @@ module VmHackTranslator::CommandType
   C_PUSH       = 2
   C_POP        = 3
   C_LABEL      = 4
-  C_GOTO    = 5
+  C_GOTO       = 5
   C_IF_GOTO    = 6
   C_IF         = 7
   C_FUNCTION   = 8

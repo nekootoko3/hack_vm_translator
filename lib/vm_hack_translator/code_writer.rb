@@ -43,6 +43,35 @@ class VmHackTranslator::CodeWriter
     @file_name = File.basename(file_name, ".vm")
   end
 
+  def write!(command_type, arg1, arg2)
+    case command_type
+    when VmHackTranslator::CommandType::C_PUSH, VmHackTranslator::CommandType::C_POP
+      write_push_pop!(command_type, arg1, arg2.to_i)
+    when VmHackTranslator::CommandType::C_ARITHMETIC
+      write_arithmetic!(arg1)
+    when VmHackTranslator::CommandType::C_LABEL
+      write_label!(arg1)
+    when VmHackTranslator::CommandType::C_IF_GOTO
+      write_if!(arg1)
+    when VmHackTranslator::CommandType::C_GOTO
+      write_goto!(arg1)
+    when VmHackTranslator::CommandType::C_FUNCTION
+      write_function!(arg1, arg2.to_i)
+    when VmHackTranslator::CommandType::C_RETURN
+      write_return!
+    when VmHackTranslator::CommandType::C_CALL
+      write_call!(arg1, arg2.to_i)
+    else
+      raise "Invalid command type"
+    end
+  end
+
+  def close!
+    output.close
+  end
+
+  private
+
   # @param command [String]
   def write_arithmetic!(command)
     case command.to_sym
@@ -132,12 +161,6 @@ class VmHackTranslator::CodeWriter
 
     @call_cnt += 1
   end
-
-  def close!
-    output.close
-  end
-
-  private
 
   def output_initialize!
     output.puts(

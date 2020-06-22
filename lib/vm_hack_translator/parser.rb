@@ -28,19 +28,14 @@ class VmHackTranslator::Parser
   end
 
   def arg1
-    case command_type
-    when VmHackTranslator::CommandType::C_ARITHMETIC
+    if command_type == VmHackTranslator::CommandType::C_ARITHMETIC
       current_command
-    when VmHackTranslator::CommandType::C_RETURN
-      raise VmHackTranslator::Error, "Invalid command type #{command_type}"
     else
       current_command_line[1]
     end
   end
 
   def arg2
-    raise VmHackTranslator::Error, "Invalid command type #{command_type}" unless arg2_enabeld?
-
     current_command_line[2]
   end
 
