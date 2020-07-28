@@ -33,9 +33,9 @@ module VmHackTranslator
     def start
       load_vm_files!
 
-      code_writer = VmHackTranslator::CodeWriter.new(output)
+      code_writer = CodeWriter.new(output)
       vm_files.each do |vm_file|
-        parser = VmHackTranslator::Parser.new(vm_file)
+        parser = Parser.new(vm_file)
         code_writer.set_file_name(vm_file)
         while parser.has_more_commands?
           parser.advance!
